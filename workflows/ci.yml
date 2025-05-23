@@ -1,0 +1,106 @@
+name: CI
+
+on:
+  push:
+    branches: ['main']
+  pull_request:
+    branches: ['main']
+
+jobs:
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          bundler-cache: true
+          ruby-version: 3.3.5
+
+      - name: Analyze code
+        run: bundle exec rubocop
+
+  rspec:
+    name: RSpec
+    needs: lint
+    runs-on: ubuntu-latest
+    env:
+      RAILS_ENV: test
+      DATABASE_URL: postgres://postgres:example@localhost:5432/db_test
+    services:
+      postgres:
+        image: postgres:13
+        ports: ['5432:5432']
+        env:
+          POSTGRES_DB: db_test
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: example
+        options: >-
+          --health-cmd pg_isready --health-interval 10s --health-timeout 5s
+          --health-retries 5
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          bundler-cache: true
+          ruby-version: 3.3.5
+
+      # - name: Install postgres client dependencies
+      #   run: sudo apt-get update && sudo apt-get install -y libpq-dev
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update && sudo apt-get install -y libpq-dev chromium-browser chromium-chromedriver
+
+      - name: Symlink chromedriver
+        run: |
+          sudo ln -s /usr/lib/chromium-browser/chromedriver /usr/bin/chromedriver || true
+
+      - name: Prepare database
+        run: bundle exec rails db:prepare
+
+      ###########################
+      # OVERCOMMIT
+      # - name: Set git user name
+      #   run: git config --global user.name "CI Bot"
+
+      # - name: Set git user email
+      #   run: git config --global user.email "ci@example.com"
+
+      # - name: Sign Overcommit config
+      #   run: bundle exec overcommit --sign
+
+      # - name: Run Overcommit hooks
+      #   run: bundle exec overcommit --run
+      ###########################
+
+      - name: Run tests (unit + system)
+        run: |
+          bundle exec rails test
+          bundle exec rails test:system
+
+  gems:
+    name: Gems Security
+    needs: rspec
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          bundler-cache: true
+          ruby-version: 3.3.5
+
+      - name: Run Brakeman (security)
+        run: bundle exec brakeman -q -w2
+
+      - name: Run Bundler Audit
+        run: bundle exec bundler-audit check --update
