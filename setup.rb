@@ -29,9 +29,10 @@ inject_into_file "Gemfile", before: "group :development, :test do\n" do
   <<~RUBY
     gem "ostruct", "~> 0.1.0"
     gem "autoprefixer-rails"
-    gem "font-awesome-sass", "~> 6.1"
+    # gem "font-awesome-sass", "~> 6.1"
     gem "simple_form", github: "heartcombo/simple_form"
     gem "sassc-rails"
+    gem 'scss_lint', require: false
 
   RUBY
 end
@@ -61,7 +62,6 @@ end
 # Assets
 ########################################
 run "rm -rf app/assets/stylesheets"
-run "rm -rf vendor"
 
 # Setup
 ########################################
@@ -74,6 +74,7 @@ run "mv tmp/rails_template-main/dependabot.yml ./.github/"
 run "mv tmp/rails_template-main/.rubocop.yml ."
 run "mv tmp/rails_template-main/.overcommit.yml ."
 run "mv tmp/rails_template-main/render.yaml ."
+run "mv tmp/rails_template-main/.scss-lint.yml ."
 run "mv tmp/rails_template-main/commitizen ./bin/"
 run "mv tmp/rails_template-main/render-build.sh ./bin/"
 run "rm -rf tmp/rails_template-main"
@@ -84,6 +85,12 @@ gsub_file(
   "app/views/layouts/application.html.erb",
   '<meta name="viewport" content="width=device-width,initial-scale=1">',
   '<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">'
+)
+
+gsub_file(
+  "app/views/layouts/application.html.erb",
+  '<%= stylesheet_link_tag "application", "data-turbo-track": "reload" %>',
+  '<%# <%= stylesheet_link_tag "application", "data-turbo-track": Rails.env.production? ? "reload" : "" %> %>'
 )
 
 run "mkdir -p app/views/components"
@@ -187,8 +194,6 @@ after_bundle do
   # Deploy config
   run "chmod a+x bin/render-build.sh"
   say "\n🎉 Deploy config successfully!", :yellow
-
-  run "rm -f template.rb"
 
   # Rubocop fix
   ########################################

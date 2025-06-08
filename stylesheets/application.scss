@@ -1,8 +1,7 @@
+@import 'helpers/index';
+@import 'vendor/index';
 @import 'base/index';
-
-// External libraries
-@import 'font-awesome';
-
-// CSS partials
+@import 'layout/index';
 @import 'components/index';
 @import 'pages/index';
+@import 'themes/index';

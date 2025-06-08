@@ -35,11 +35,23 @@ PreCommit:
   RuboCop:
     enabled: true
     command: ['bundle', 'exec', 'rubocop']
+
+  SCSSLint:
+    enabled: true
+    required_executable: 'scss-lint'
+    command: ['bundle', 'exec', 'scss-lint']
+    include:
+      - '**/*.scss'
+    exclude:
+      - 'vendor/**/*'
+      - 'node_modules/**/*'
+
   ForbiddenPatterns:
     enabled: true
     exclude: []
     pattern: '\.env'
     message: 'Never commit .env files'
+
   TrailingWhitespace:
     enabled: true
     exclude:
@@ -48,6 +60,7 @@ PreCommit:
     enabled: true
     required_executable: 'brakeman'
     command: ['bundle', 'exec', 'brakeman', '-q', '-w2']
+
   BundlerAudit:
     enabled: true
     required_executable: 'bundler-audit'

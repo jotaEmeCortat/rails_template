@@ -7,6 +7,7 @@ This Rails project adopts a standardized workflow using:
   [Overcommit](https://github.com/sds/overcommit)
 - [Rubocop](https://rubocop.org/) configuration
 - Stylesheet template
+- Sass linter configuration
 - GitHub workflow for CI
 - Dependabot configuration
 - Recommended branch protection rules for `main`
