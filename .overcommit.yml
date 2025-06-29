@@ -75,10 +75,9 @@ CommitMsg:
     max_subject_width: 72
   MessageFormat:
     enabled: true
-    format: '/^(feat|fix|docs|style|refactor|test|chore)(\(.+\))?\s\|\s.+\s\|\s.+$/'
+    format: '/^(feat|fix|docs|style|refactor|test|chore)(\(.+\))?\s\|\s.+$/'
     error_message:
-      'Your commit message must follow: <type>(<scope>) | <description> |
-      <developers>'
+      'Your commit message must follow: <type>(<scope>) | <description>'
   SpellCheck:
     enabled: false
   CapitalizedSubject:

@@ -1,82 +1,133 @@
 # Rails Template
 
-This Rails project adopts a standardized workflow using:
+A modular and professional Rails template with three configuration options:
+Default, Bootstrap, and Tailwind CSS.
 
-- Interactive commits with a **custom** Commitizen script (no Node.js required)
-- Automatic commit validation via
-  [Overcommit](https://github.com/sds/overcommit)
-- [Rubocop](https://rubocop.org/) configuration
-- Stylesheet template
-- Sass linter configuration
-- GitHub workflow for CI
-- Dependabot configuration
-- Recommended branch protection rules for `main`
-- Deployment to Render
+## 🚀 Templates Available
 
-## Setup
+- **Default**: Rails + Sass with organized stylesheet structure
+- **Bootstrap**: Rails + Bootstrap 5 with responsive components
+- **Tailwind**: Rails + Tailwind CSS with utility-first framework
 
-Get template whit PostgreSQL and ready to be deployed to Render.
+## ⚡ Quick Setup
 
-```sh
-rails _7.1.3.4_ new <RAILS-APP> -d postgresql -m https://raw.githubusercontent.com/jotaEmeCortat/rails_template/refs/heads/main/setup.rb
+### Option 1: Install correct Rails version (Recommended)
+
+```bash
+gem install rails -v 7.1.3.4
+rails new my_app -d postgresql -m https://raw.githubusercontent.com/jotaEmeCortat/rails_template/refs/heads/main/setup.rb
 ```
 
-## Standardized Commits with custom Commitizen script
+### Option 2: Force specific version
 
-To make this easier, a **custom Bash script** (`bin/commitizen`) is provided —
-**no Node.js required**.
+```bash
+rails _7.1.3.4_ new my_app -d postgresql -m https://raw.githubusercontent.com/jotaEmeCortat/rails_template/refs/heads/main/setup.rb
+```
 
-### ✅ How to use
+The template automatically checks if you're using the correct Rails version.
 
-#### Add an alias to your shell config:
+## ✨ Features
 
-Append this line to your `~/.zshrc` or `~/.bashrc`:
+### 🔧 Development Tools
 
-```sh
+- **Overcommit**: Git hooks for code quality
+- **Commitizen**: Standardized commits (no Node.js required)
+- **Rubocop**: Code linting and formatting
+- **Brakeman**: Security scanning
+- **Bundler Audit**: Dependency vulnerability checking
+
+### 🎨 Frontend Options
+
+- **Default**: Organized SCSS structure
+- **Bootstrap**: Complete Bootstrap 5 setup with JavaScript integration
+- **Tailwind**: Tailwind CSS with build optimization for production
+
+### ⚙️ Automatic Configuration
+
+- Custom error pages (400, 404, 422, 500)
+- Database setup for production (PostgreSQL)
+- Environment variables (.env)
+- Responsive viewport meta tag
+- Asset pipeline optimization
+- Deploy configuration for Render.com
+
+### 📦 Included Gems
+
+- **Development**: dotenv-rails, hotwire-livereload
+- **Quality**: rubocop, brakeman, bundler-audit, overcommit
+- **Utilities**: simple_form, faker, ostruct
+
+## 📝 Standardized Commits
+
+The template includes a custom Commitizen script (no Node.js required).
+
+### Setup alias:
+
+```bash
+# Add to your ~/.zshrc or ~/.bashrc
 alias cz="bin/commitizen"
 ```
 
-Then reload your shell:
+### Usage:
 
-```sh
-source ~/.zshrc
-# or
-source ~/.bashrc
-```
-
-#### Make commits using:
-
-```sh
+```bash
 cz
 ```
 
-The script will guide you through an interactive prompt.
+The script will guide you through an interactive commit message creation.
 
-## Recommended Branch Protection for `main`
+## 🚀 Deployment & CI/CD
 
-Configure these settings on GitHub (Settings → Branches):
+Ready for deployment to Render.com with safe manual deployment workflow:
 
-| Setting                              | Status   |
-| ------------------------------------ | -------- |
-| Protect matching branches            | ✅       |
-| Require pull request before merging  | ✅       |
-| Require approvals (1 or 2)           | ✅       |
-| Dismiss stale pull request approvals | ✅       |
-| Require review from Code Owners      | Optional |
-| Require approval of most recent push | ✅       |
-| Require status checks to pass        | ✅       |
-| Require branches to be up to date    | ✅       |
-| Require conversation resolution      | ✅       |
-| Require signed commits               | Optional |
-| Require linear history               | Optional |
-| Require successful deployments       | Optional |
-| Lock branch                          | ⛔       |
-| Do not allow bypassing by admins     | ✅       |
-| Allow force pushes                   | ⛔       |
-| Allow deletions                      | ⛔       |
+### 🔄 Continuous Integration
+
+- **Lint**: Code quality checks with Rubocop
+- **Test**: Full test suite (unit + system tests)
+- **Security**: Brakeman + Bundler Audit scans
+- **Automated**: Runs on every push and pull request
+
+### 🚀 Safe Manual Deployment
+
+- **CI First**: Always check that CI passes before deploy
+- **Manual Control**: Deploy from Render dashboard when ready
+- **No API Keys**: Works perfectly with Render free tier
+- **Simple Setup**: No complex configurations needed
+- **Zero Cost**: No additional services or integrations required
+
+## 🔒 GitHub Configuration
+
+### Branch Protection Rules (Recommended)
+
+Configure these settings for your `main` branch to ensure safe deployments:
+
+| Setting                           | Recommended | Purpose                          |
+| --------------------------------- | ----------- | -------------------------------- |
+| Require pull request reviews      | ✅          | Code review before merge         |
+| Require status checks to pass     | ✅          | CI must pass before merge        |
+| Require branches to be up to date | ✅          | Prevent merge conflicts          |
+| Require conversation resolution   | ✅          | All comments must be resolved    |
+| Restrict pushes that create files | ✅          | Prevent accidental large commits |
+| Include administrators            | ✅          | Rules apply to all users         |
+
+### Required Status Checks
+
+Add these CI workflow jobs as required status checks:
+
+- `CI / Lint`
+- `CI / RSpec`
+- `CI / Gems Security`
+
+### 🎯 Result
+
+With branch protection enabled:
+
+- ❌ **No broken code** can reach main branch
+- ✅ **Only tested code** gets deployed
+- 🛡️ **Safe manual deploys** every time
+
+**This makes your manual deployment workflow bulletproof!** 🚀
 
 ---
 
-</br>
-
-**Happy coding!**
+**Happy coding!** 🎉

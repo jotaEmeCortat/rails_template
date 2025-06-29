@@ -1,211 +1,92 @@
-# def ask_yes_or_no(question)
-#   valid_answers = { "yes" => true, "y" => true, "no" => false }
-#
-#   answer = nil
-#   until valid_answers.key?(answer)
-#     answer = ask("\n#{question} (yes/no)").strip.downcase
-#   end
-#
-#   valid_answers[answer]
-# end
-#
-# apply "https://raw.githubusercontent.com/jotaEmeCortat/rails_templates/refs/heads/main/minimal.rb"
-#
-# if ask_yes_or_no("Install Bootstrap?")
-#   apply "https://raw.githubusercontent.com/jotaEmeCortat/rails_templates/refs/heads/main/bootstrap.rb"
-# end
-#
-# if ask_yes_or_no("Install Devise?")
-#   apply "https://raw.githubusercontent.com/jotaEmeCortat/rails_templates/refs/heads/main/devise.rb"
-# end
+# Load all setup modules
+require_relative 'templates/common_setup'
+require_relative 'templates/default_setup'
+require_relative 'templates/bootstrap_setup'
+require_relative 'templates/tailwind_setup'
+require_relative 'templates/after_bundle_setup'
 
-say "\n🎉 Start Minimal setup...", :blue
+# Colors for output
+def colorize(text, color_code)
+  "\e[#{color_code}m#{text}\e[0m"
+end
 
+def green(text); colorize(text, 32); end
+def yellow(text); colorize(text, 33); end
+def blue(text); colorize(text, 34); end
+def red(text); colorize(text, 31); end
+def cyan(text); colorize(text, 36); end
+def magenta(text); colorize(text, 35); end
+
+# Template header
+puts "\n"
+puts blue("=" * 70)
+puts blue("Rails Template")
+puts blue("=" * 70)
+puts "\n"
+
+# Template selection
+puts cyan("Please choose your template type:")
+puts "\n"
+puts "  #{green('1)')} #{yellow('Default')}   - Rails + sass"
+puts "  #{green('2)')} #{yellow('Bootstrap')} - Rails + Bootstrap 5"
+puts "  #{green('3)')} #{yellow('Tailwind')}  - Rails + Tailwind CSS"
+puts "\n"
+
+template_choice = nil
+until template_choice
+  print cyan("Enter your choice (1-3): ")
+  input = gets.chomp
+
+  case input
+  when '1'
+    template_choice = :default
+    puts green("✨ You selected: Default template")
+  when '2'
+    template_choice = :bootstrap
+    puts green("✨ You selected: Bootstrap template")
+  when '3'
+    template_choice = :tailwind
+    puts green("✨ You selected: Tailwind template")
+  else
+    puts red("❌ Invalid choice. Please enter 1, 2, or 3.")
+  end
+end
+
+puts "\n"
+puts blue("-" * 50)
+puts blue("🚀 Starting #{template_choice.to_s.capitalize} Template Setup")
+puts blue("-" * 50)
+puts "\n"
+
+# Kill spring processes
 run "if uname | grep -q 'Darwin'; then pgrep spring | xargs kill -9; fi"
 
-# Gemfile
-########################################
-inject_into_file "Gemfile", before: "group :development, :test do\n" do
-  <<~RUBY
-    gem "ostruct", "~> 0.1.0"
-    gem "autoprefixer-rails"
-    # gem "font-awesome-sass", "~> 6.1"
-    gem "simple_form", github: "heartcombo/simple_form"
-    gem "sassc-rails"
-    gem 'scss_lint', require: false
+# Execute common setup
+setup_common_gems
+setup_common_configs
+setup_template_files
+setup_database
+setup_environment
 
-  RUBY
+# Execute template-specific setup
+case template_choice
+when :default
+  setup_default_template
+when :bootstrap
+  setup_bootstrap_template
+when :tailwind
+  setup_tailwind_template
 end
 
-inject_into_file "Gemfile", after: "group :development, :test do\n" do
-  <<~RUBY
-    gem "dotenv-rails"
-    gem "brakeman", require: false
-    gem "bundler-audit", require: false
-    gem "overcommit"
-    gem "rubocop", require: false
-    gem "rubocop-discourse", require: false
-    gem "rubocop-rails", require: false
-
-  RUBY
-end
-
-
-
-inject_into_file "Gemfile", after: "group :development do\n" do
-  <<~RUBY
-    gem "hotwire-livereload"
-
-  RUBY
-end
-
-# Assets
-########################################
-run "rm -rf app/assets/stylesheets"
-
-# Setup
-########################################
-run "mkdir -p .github"
-run "curl -L https://github.com/jotaEmeCortat/rails_template/archive/main.zip > rails_template.zip"
-run "unzip -q -o rails_template.zip -d tmp && rm -f rails_template.zip"
-run "mv tmp/rails_template-main/stylesheets app/assets/stylesheets"
-run "mv tmp/rails_template-main/workflows ./.github/"
-run "mv tmp/rails_template-main/dependabot.yml ./.github/"
-run "mv tmp/rails_template-main/.rubocop.yml ."
-run "mv tmp/rails_template-main/.overcommit.yml ."
-run "mv tmp/rails_template-main/render.yaml ."
-run "mv tmp/rails_template-main/.scss-lint.yml ."
-run "mv tmp/rails_template-main/commitizen ./bin/"
-run "mv tmp/rails_template-main/render-build.sh ./bin/"
+# Clean up
+puts yellow("🗑️ Clean up template files...")
 run "rm -rf tmp/rails_template-main"
 
-# Layout
-########################################
-gsub_file(
-  "app/views/layouts/application.html.erb",
-  '<meta name="viewport" content="width=device-width,initial-scale=1">',
-  '<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">'
-)
+puts "\n"
+puts green("🎉 #{template_choice.to_s.capitalize} template setup completed!")
+puts "\n"
 
-gsub_file(
-  "app/views/layouts/application.html.erb",
-  '<%= stylesheet_link_tag "application", "data-turbo-track": "reload" %>',
-  '<%# <%= stylesheet_link_tag "application", "data-turbo-track": Rails.env.production? ? "reload" : "" %> %>'
-)
-
-run "mkdir -p app/views/components"
-
-# Generators
-########################################
-generators = <<~RUBY
-  config.generators do |generate|
-    generate.assets false
-    generate.helper false
-    generate.test_framework :test_unit, fixture: false
-  end
-RUBY
-
-environment generators
-
-# General Config
-########################################
-general_config = <<~RUBY
-  config.action_controller.raise_on_missing_callback_actions = false if Rails.version >= "7.1.0"
-RUBY
-
-environment general_config
-
-# After bundle
-########################################
+# After bundle installation - Final setup
 after_bundle do
-  # Generators: db
-  rails_command "db:drop db:create db:migrate"
-
-  # Generators: simple_form
-  generate("simple_form:install")
-
-  # Custom error pages
-  run "rm -f public/*.html"
-
-  environment <<~RUBY, env: 'production'
-    config.exceptions_app = self.routes
-  RUBY
-
-  generate(:controller, "errors", "--skip-routes")
-
-  gsub_file "config/routes.rb", /end\s*\z/ do
-    <<~RUBY
-
-      # Custom error pages
-      match "/:code", to: "errors#error_page", via: :all,
-        constraints: { code: /(400|404|406|422|500)/ }
-
-      # Test routes for error simulation (development only)
-      if Rails.env.development?
-        get "/force_404", to: "errors#error_page", defaults: { code: "404" }
-      end
-    end
-    RUBY
-  end
-
-  inject_into_class "app/controllers/errors_controller.rb", "ErrorsController" do
-    <<~RUBY
-
-      VALID_STATUS_CODES = %w[400 404 406 422 500]
-
-      def error_page
-        status_code = VALID_STATUS_CODES.include?(params[:code]) ? params[:code] : "500"
-        respond_to do |format|
-          format.html { render "error_page", status: status_code }
-          format.any  { head status_code }
-        end
-      end
-    RUBY
-  end
-
-  file "app/views/errors/error_page.html.erb", <<~ERB
-    <h1><%= response.code %></h1>
-  ERB
-
-  # Gitignore
-  append_file ".gitignore", <<~TXT
-
-    # Ignore .env file containing credentials.
-    .env*
-
-    # Ignore Mac and Linux file system files
-    *.swp
-    .DS_Store
-  TXT
-
-  # Dotenv
-  run "touch '.env'"
-
-  # Setup
-  run "overcommit --install"
-  run "overcommit --sign pre-commit"
-  run "overcommit --sign pre-push"
-  say "\n🎉 Overcommit installed successfully!", :yellow
-
-  run "chmod +x ./bin/commitizen"
-  say "\n🎉 Commitizen installed successfully!", :yellow
-
-
-  # Deploy config
-  run "chmod a+x bin/render-build.sh"
-  say "\n🎉 Deploy config successfully!", :yellow
-
-  # Rubocop fix
-  ########################################
-  Bundler.with_unbundled_env do
-    run "bundle exec rubocop -a || true"
-  end
-  say "\n🎉 Rubocop auto-corrected your code!", :yellow
-  say "\n🎉 Minimal setup completed successfully!", :blue
-
-  # Git
-  ########################################
-  git :init
-  git add: "."
-  git commit: "-m 'rails new' --no-verify"
+  setup_after_bundle(template_choice)
 end

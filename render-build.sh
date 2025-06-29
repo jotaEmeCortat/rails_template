@@ -3,11 +3,14 @@
 # Exit on error
 set -o errexit
 
+# Install gems
 bundle install
-bin/rails assets:precompile
-bin/rails assets:clean
 
-# If you have a paid instance type, we recommend moving
-# database migrations like this one from the build command
-# to the pre-deploy command:
+# Run database migrations first
 bin/rails db:migrate
+
+# Precompile assets (includes CSS and JS)
+bin/rails assets:precompile
+
+# Clean old assets (optional, but good practice)
+bin/rails assets:clean

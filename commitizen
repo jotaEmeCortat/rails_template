@@ -29,7 +29,7 @@ fi
 
 read -p "Commit message description: " description
 
-read -p "Developer(s) (e.g., John Doe): " developers
+# read -p "Developer(s) (e.g., John Doe): " developers
 
 read -p "Are there any BREAKING CHANGES? (y/N): " breaking
 if [[ "$breaking" =~ ^[yY]$ ]]; then
@@ -37,10 +37,12 @@ if [[ "$breaking" =~ ^[yY]$ ]]; then
   breaking_change="BREAKING CHANGE: $breaking_change"
 fi
 
-read -p "Reference issues (e.g., #123, separate by space, press Enter to skip): " issues
+# read -p "Reference issues (e.g., #123, separate by space, press Enter to skip): " issues
 
 # Compose the commit message in the expected format
-commit_msg="$type$scope | $description | $developers"
+# commit_msg="$type$scope | $description | $developers"
+commit_msg="$type$scope | $description"
+
 
 # Optionally append breaking changes and issues
 if [ -n "$breaking_change" ]; then
