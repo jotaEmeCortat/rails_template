@@ -291,7 +291,8 @@ def setup_after_bundle(template_choice)
 
   # Git initialization
   puts yellow("📦 Initializing Git repository...")
-  run "git commit -m 'rails new' --no-verify"
+  git add: "."
+  git commit: "-m 'rails new' --no-verify"
   puts green("✅ Git repository initialized!")
 
   puts "\n"
