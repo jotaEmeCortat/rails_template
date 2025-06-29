@@ -34,7 +34,7 @@ def setup_common_gems
         gem "dotenv-rails"
         gem "brakeman", require: false
         gem "bundler-audit", require: false
-        gem "overcommit"
+        gem "overcommit", require: false
         gem "rubocop", require: false
         gem "rubocop-discourse", require: false
         gem "rubocop-rails", require: false
@@ -98,18 +98,15 @@ def setup_common_files
   puts yellow("📁 Setting up common configuration files...")
 
   # Download configuration files from GitHub repository
-  run "mkdir -p .github"
   run "curl  -L  https://github.com/jotaEmeCortat/rails_template/archive/main.zip > rails_template.zip"
   run "unzip -q  -o rails_template.zip -d tmp && rm -f rails_template.zip"
 
   # Move configuration files to correct locations
-  run "mv tmp/rails_template-main/workflows ./.github/"
-  run "mv tmp/rails_template-main/.overcommit.yml ."
-  run "mv tmp/rails_template-main/.rubocop.yml ."
-  run "mv tmp/rails_template-main/commitizen ./bin/"
-  run "mv tmp/rails_template-main/dependabot.yml ./.github/"
-  run "mv tmp/rails_template-main/render-build.sh ./bin/"
-  run "mv tmp/rails_template-main/render.yaml ."
+  run "mv tmp/rails_template-main/common_files/.github ."
+  run "mv tmp/rails_template-main/common_files/commitizen ./bin/"
+  run "mv tmp/rails_template-main/common_files/render-build.sh ./bin/"
+  run "mv tmp/rails_template-main/common_files/.overcommit.yml ."
+  run "mv tmp/rails_template-main/common_files/.rubocop.yml ."
 
   puts green("✅ Configuration files downloaded and configured!")
 end
@@ -150,42 +147,16 @@ def setup_error_pages
   # Generate errors controller
   generate(:controller, "errors", "--skip-routes")
 
-  # Add custom error routes
-  gsub_file "config/routes.rb", /end\s*\z/ do
-    <<~RUBY
+  # Replace default routes with custom routes file
+  run "rm config/routes.rb"
+  run "cp tmp/rails_template-main/error_page_files/routes.rb config/"
 
-      # Custom error pages
-      match "/:code", to: "errors#error_page", via: :all,
-        constraints: { code: /(400|404|406|422|500)/ }
+  # Replace generated controller with custom errors controller
+  run "rm app/controllers/errors_controller.rb"
+  run "cp tmp/rails_template-main/error_page_files/errors_controller.rb app/controllers/"
 
-      # Test routes for error simulation (development only)
-      if Rails.env.development?
-        get "/force_404", to: "errors#error_page", defaults: { code: "404" }
-      end
-    end
-    RUBY
-  end
-
-  # Add error handling logic to controller
-  inject_into_class "app/controllers/errors_controller.rb", "ErrorsController" do
-    <<~RUBY
-
-      VALID_STATUS_CODES = %w[400 404 406 422 500]
-
-      def error_page
-        status_code = VALID_STATUS_CODES.include?(params[:code]) ? params[:code] : "500"
-        respond_to do |format|
-          format.html { render "error_page", status: status_code }
-          format.any  { head status_code }
-        end
-      end
-    RUBY
-  end
-
-  # Create error page view
-  file "app/views/errors/error_page.html.erb", <<~ERB
-    <h1><%= response.code %></h1>
-  ERB
+  # Create error page view from repository
+  run "cp tmp/rails_template-main/error_page_files/error_page.html.erb app/views/errors/"
 
   puts green("✅ Custom error pages configured!")
 end
@@ -203,17 +174,9 @@ def setup_default_template
     RUBY
   end
 
-  inject_into_file "Gemfile", after: "group :development, :test do\n" do
-    <<~RUBY
-        gem 'scss_lint', require: false
-
-    RUBY
-  end
-
   # Setup default stylesheets
   run "rm    app/assets/stylesheets/application.css"
   run "cp -r tmp/rails_template-main/stylesheets_default/* app/assets/stylesheets/"
-  run "mv    tmp/rails_template-main/.scss-lint.yml ."
 
   puts green("✅ Default template configured!")
 end
