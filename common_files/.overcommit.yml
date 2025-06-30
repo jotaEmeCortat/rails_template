@@ -1,0 +1,124 @@
+# Overcommit Configuration - Universal Rails Template
+# This file automatically adapts to different Rails
+
+# Global configuration - fail on warnings to ensure quality
+fail_fast: true
+quiet: false
+
+PreCommit:
+  RuboCop:
+    enabled: true
+    on_warn: fail # Fail on RuboCop warnings
+    command: ['bundle', 'exec', 'rubocop']
+
+  # SCSS Lint is deprecated - replaced by Stylelint
+  # Uncomment and configure Stylelint if needed:
+  # Stylelint:
+  #   enabled: true
+  #   command: ['npx', 'stylelint']
+  #   include: '**/*.{css,scss,sass}'
+
+  ForbiddenPatterns:
+    enabled: true
+    exclude:
+      - '*.md' # Allow .env examples in documentation
+      - 'docker-compose*.yml' # Allow .env references in Docker files
+    pattern: '^\s*\.(env|key)$|credentials\.yml\.enc$|config/database\.yml$|\.pem$|\.p12$|\.secret$|AWS_|STRIPE_|API_KEY|SECRET_KEY|PRIVATE_KEY|password.*=|token.*='
+    message:
+      'Never commit sensitive files (.env, master.key, credentials,
+      database.yml, certificates) or secrets in code'
+
+  # Additional security pattern for SSH keys and private files
+  ForbiddenPatterns2:
+    enabled: true
+    exclude: []
+    pattern: 'id_(rsa|dsa|ecdsa|ed25519)(\.|$)|\.ppk$|\.keystore$|\.jks$|private.*key'
+    message: 'Never commit SSH keys, private keys, or keystores'
+
+  TrailingWhitespace:
+    enabled: true
+    exclude:
+      - '**/db/structure.sql'
+      - '**/db/schema.rb'
+
+  # Security analysis - only runs if gem is present
+  Brakeman:
+    enabled: true
+    on_warn: fail # Fail on security warnings
+    required_executable: 'brakeman'
+    command: ['bundle', 'exec', 'brakeman', '-q', '-w2']
+
+  # Dependency vulnerability check - only runs if gem is present
+  BundlerAudit:
+    enabled: true
+    on_warn: fail # Fail on vulnerability warnings
+    required_executable: 'bundler-audit'
+    command: ['bundle', 'exec', 'bundler-audit', 'check', '--update']
+
+  # Additional useful hooks - fail on code quality issues
+  FixMe:
+    enabled: true
+    on_warn: fail # Fail on TODO/FIXME findings
+    exclude:
+      - '.overcommit.yml' # Exclude this config file from keyword detection
+    keywords:
+      - 'FIXME'
+      - 'TODO'
+      - 'HACK'
+
+  MergeConflicts:
+    enabled: true
+
+CommitMsg:
+  # Disable problematic message format validation
+  # Projects can enable and customize as needed
+  MessageFormat:
+    enabled: false
+    # Example patterns - uncomment and modify as needed:
+    # format: '/^(feat|fix|docs|style|refactor|test|chore)(\(.+\))?: .+/'
+    # error_message: 'Use format: <type>(<scope>): <description>'
+
+  # Basic commit message validation
+  EmptyMessage:
+    enabled: false # Allow empty commits for merge commits
+
+  TextWidth:
+    enabled: true
+    max_subject_width: 72
+
+  CapitalizedSubject:
+    enabled: false
+
+  # Useful additional hooks - uncomment as needed:
+  # TrailingPeriod:
+  #   enabled: true
+
+PrePush:
+  # Run tests before pushing - works with any Rails test setup
+  RunTests:
+    enabled: true
+    required_executable: 'rails'
+    command: ['bundle', 'exec', 'rails', 'test']
+    parallelize: true # Faster test execution
+
+  # Check for pending migrations before push
+  PendingMigrations:
+    enabled: true
+    required_executable: 'rails'
+    command: [
+        'sh',
+        '-c',
+        '
+        STATUS=$(bundle exec rails db:migrate:status 2>/dev/null | grep "down" |
+        wc -l); if [ "$STATUS" -gt 0 ]; then echo "You have pending migrations.
+        Run: rails db:migrate"; bundle exec rails db:migrate:status | grep
+        "down"; exit 1; fi
+        ',
+      ]
+
+  # Prevent direct pushes to protected branches
+  ProtectedBranches:
+    enabled: true
+    branches: ['main', 'master', 'production', 'staging', 'release']
+    message:
+      'Direct pushes to protected branches are not allowed. Use pull requests.'

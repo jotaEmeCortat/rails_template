@@ -1,0 +1,72 @@
+#!/usr/bin/env bash
+# filepath: bin/commitizen
+
+echo "Select the type of change you're committing:"
+echo "  1) feat      (A new feature)"
+echo "  2) fix       (A bug fix)"
+echo "  3) docs      (Documentation only changes)"
+echo "  4) style     (Changes that do not affect the meaning of the code)"
+echo "  5) refactor  (A code change that neither fixes a bug nor adds a feature)"
+echo "  6) test      (Adding missing tests or correcting existing tests)"
+echo "  7) chore     (Other changes that don't modify src or test files)"
+read -p "Choose the type (1-7): " type_num
+
+case $type_num in
+  1) type="feat" ;;
+  2) type="fix" ;;
+  3) type="docs" ;;
+  4) type="style" ;;
+  5) type="refactor" ;;
+  6) type="test" ;;
+  7) type="chore" ;;
+  *) echo "Invalid type"; exit 1 ;;
+esac
+
+read -p "Scope (optional, e.g., model, controller): " scope
+if [ -n "$scope" ]; then
+  scope="($scope)"
+fi
+
+read -p "Commit message description: " description
+
+# read -p "Developer(s) (e.g., John Doe): " developers
+
+read -p "Are there any BREAKING CHANGES? (y/N): " breaking
+if [[ "$breaking" =~ ^[yY]$ ]]; then
+  read -p "Describe the breaking change: " breaking_change
+  breaking_change="BREAKING CHANGE: $breaking_change"
+fi
+
+# read -p "Reference issues (e.g., #123, separate by space, press Enter to skip): " issues
+
+# Compose the commit message in the expected format
+# commit_msg="$type$scope | $description | $developers"
+commit_msg="$type$scope | $description"
+
+
+# Optionally append breaking changes and issues
+if [ -n "$breaking_change" ]; then
+  commit_msg="$commit_msg
+
+$breaking_change"
+fi
+
+if [ -n "$issues" ]; then
+  commit_msg="$commit_msg
+
+Refs: $issues"
+fi
+
+echo
+echo "Final commit message:"
+echo "---------------------"
+echo "$commit_msg"
+echo "---------------------"
+echo
+
+read -p "Do you want to commit with this message? (Y/n): " confirm
+if [[ "$confirm" =~ ^[yY]$ ]] || [[ -z "$confirm" ]]; then
+  git commit -m "$commit_msg"
+else
+  echo "Commit cancelled."
+fi
