@@ -102,7 +102,7 @@ def setup_common_files
   run "unzip -q  -o rails_template.zip -d tmp && rm -f rails_template.zip"
 
   # Move configuration files to correct locations
-  run "mv tmp/rails_template-main/common_files/.github ."
+  run "mv tmp/rails_template-main/.github ."
   run "mv tmp/rails_template-main/common_files/commitizen ./bin/"
   run "mv tmp/rails_template-main/common_files/render-build.sh ./bin/"
   run "mv tmp/rails_template-main/common_files/.overcommit.yml ."
