@@ -322,8 +322,8 @@ def setup_bootstrap_javascript
   end
 
   # Adjust importmap.rb to ensure correct pinning of minified files
-  gsub_file "config/importmap.rb", /pin \"bootstrap\".*\n/, 'pin "bootstrap", to: "bootstrap.min.js", preload: true\n'
-  gsub_file "config/importmap.rb", /pin \"@popperjs\\/core\".*\n/, 'pin "@popperjs/core", to: "popper.js", preload: true\n'
+  gsub_file "config/importmap.rb", /pin "bootstrap".*\n/, 'pin "bootstrap", to: "bootstrap.min.js", preload: true\n'
+  gsub_file "config/importmap.rb", /pin "@popperjs\/core".*\n/, 'pin "@popperjs/core", to: "popper.js", preload: true\n'
 
   puts green("✅ Bootstrap JavaScript configured!")
 end
