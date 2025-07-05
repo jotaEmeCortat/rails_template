@@ -321,9 +321,16 @@ def setup_bootstrap_javascript
     MANIFEST
   end
 
-  # Adjust importmap.rb to ensure correct pinning of minified files
-  gsub_file "config/importmap.rb", /pin "bootstrap".*\n/, 'pin "bootstrap", to: "bootstrap.min.js", preload: true\n'
-  gsub_file "config/importmap.rb", /pin "@popperjs\/core".*\n/, 'pin "@popperjs/core", to: "popper.js", preload: true\n'
+  # Ajusta cada pin separadamente, sem concatenar linhas
+  gsub_file 'config/importmap.rb', /^pin "bootstrap".*$/, 'pin "bootstrap", to: "bootstrap.min.js", preload: true'
+  gsub_file 'config/importmap.rb', /^pin "@popperjs\/core".*$/, 'pin "@popperjs/core", to: "popper.js", preload: true'
+
+  unless File.read('config/importmap.rb').include?('pin "bootstrap"')
+    append_file 'config/importmap.rb', "pin \"bootstrap\", to: \"bootstrap.min.js\", preload: true\n"
+  end
+  unless File.read('config/importmap.rb').include?('pin "@popperjs/core"')
+    append_file 'config/importmap.rb', "pin \"@popperjs/core\", to: \"popper.js\", preload: true\n"
+  end
 
   puts green("✅ Bootstrap JavaScript configured!")
 end
@@ -485,7 +492,7 @@ def select_template
   puts cyan("Please choose your template type:")
   puts "\n"
   puts "  #{green('1)')} #{yellow('Default')}   - Rails + sass"
-  puts "  #{green('2)')} #{yellow('Bootstrap')} - Rails + Bootstrap 5 + Font Awesome"
+  puts "  #{green('2)')} #{yellow('Bootstrap + Font Awesome')} - Rails + Bootstrap 5 + Font Awesome"
   puts "  #{green('3)')} #{yellow('Tailwind')}  - Rails + Tailwind CSS"
   puts "\n"
 
