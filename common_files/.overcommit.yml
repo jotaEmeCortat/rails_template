@@ -1,18 +1,18 @@
-# Overcommit Configuration - Universal Rails Template
-# This file automatically adapts to different Rails
+# Overcommit Configuration for Rails Projects
+# Enforces code quality, security, and workflow standards for all contributors.
+# Customize hooks as needed for your team or stack.
 
-# Global configuration - fail on warnings to ensure quality
-fail_fast: true
-quiet: false
+fail_fast: true # Stop on first failure
+quiet: false # Show all output
 
 PreCommit:
   RuboCop:
     enabled: true
     on_warn: fail # Fail on RuboCop warnings
-    command: ['bundle', 'exec', 'rubocop']
+    command: ['bundle', 'exec', 'rubocop', '--autocorrect']
 
   # SCSS Lint is deprecated - replaced by Stylelint
-  # Uncomment and configure Stylelint if needed:
+  # To enable Stylelint for CSS/SCSS/SASS, uncomment below:
   # Stylelint:
   #   enabled: true
   #   command: ['npx', 'stylelint']
@@ -23,10 +23,10 @@ PreCommit:
     exclude:
       - '*.md' # Allow .env examples in documentation
       - 'docker-compose*.yml' # Allow .env references in Docker files
-    pattern: '^\s*\.(env|key)$|credentials\.yml\.enc$|config/database\.yml$|\.pem$|\.p12$|\.secret$|AWS_|STRIPE_|API_KEY|SECRET_KEY|PRIVATE_KEY|password.*=|token.*='
-    message:
-      'Never commit sensitive files (.env, master.key, credentials,
-      database.yml, certificates) or secrets in code'
+    pattern: '^*\.(env|key)$|credentials\.yml\.enc$|config/database\.yml$|\.pem$|\.p12$|\.secret$|AWS_|STRIPE_|API_KEY|SECRET_KEY|PRIVATE_KEY|password.*=|token.*='
+    message: |
+      Never commit sensitive files (.env, master.key, credentials,
+      database.yml, certificates) or secrets in code
 
   # Additional security pattern for SSH keys and private files
   ForbiddenPatterns2:
@@ -70,8 +70,7 @@ PreCommit:
     enabled: true
 
 CommitMsg:
-  # Disable problematic message format validation
-  # Projects can enable and customize as needed
+  # Commit message format validation (customize as needed)
   MessageFormat:
     enabled: false
     # Example patterns - uncomment and modify as needed:

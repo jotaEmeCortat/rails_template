@@ -8,7 +8,7 @@ production-ready deployment configuration.
 ### Frontend Options
 
 - **Default**: Rails + Sass stylesheets with modular structure
-- **Bootstrap**: Bootstrap 5 + custom variables and components
+- **Bootstrap + Font Awesome**: Bootstrap 5 + custom variables and components + Font Awesome
 - **Tailwind**: Tailwind CSS with optimized build configuration
 
 ### Development Tools
@@ -37,7 +37,7 @@ rails _7.1.3.4_ new <APP-NAME> -d postgresql -m https://raw.githubusercontent.co
 The template will prompt you to choose:
 
 1. **Default** - Rails + Sass
-2. **Bootstrap** - Rails + Bootstrap 5
+2. **Bootstrap + Font Awesome** - Rails + Bootstrap 5 + Font Awesome
 3. **Tailwind** - Rails + Tailwind CSS
 
 ## 💻 Development Workflow

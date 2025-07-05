@@ -313,19 +313,32 @@ def setup_bootstrap_javascript
     JS
   end
 
+  # Add to manifest.js for Sprockets compatibility
+  inject_into_file "app/assets/config/manifest.js", after: "//= link_tree ../images\n" do
+    <<~MANIFEST
+      //= link popper.js
+      //= link bootstrap.min.js
+    MANIFEST
+  end
+
+  # Adjust importmap.rb to ensure correct pinning of minified files
+  gsub_file "config/importmap.rb", /pin \"bootstrap\".*\n/, 'pin "bootstrap", to: "bootstrap.min.js", preload: true\n'
+  gsub_file "config/importmap.rb", /pin \"@popperjs\\/core\".*\n/, 'pin "@popperjs/core", to: "popper.js", preload: true\n'
+
   puts green("✅ Bootstrap JavaScript configured!")
 end
 
 def setup_bootstrap_template
   puts yellow("🔧 Setting up Bootstrap template...")
 
-  # Add Bootstrap specific gems
+  # Add Bootstrap and Font Awesome specific gems
   inject_into_file "Gemfile", before: "group :development, :test do\n" do
     <<~RUBY
-      gem "bootstrap", "~> 5.2"
+      gem "bootstrap", "~> 5.3.3"
       gem "sassc-rails"
       gem "autoprefixer-rails"
       gem "mini_racer", platforms: :ruby
+      gem "font-awesome-sass", "~> 6.1"
 
     RUBY
   end
@@ -335,6 +348,11 @@ def setup_bootstrap_template
 
   # Create Bootstrap stylesheet structure
   setup_bootstrap_stylesheets
+
+  # Import Font Awesome in application.scss
+  inject_into_file "app/assets/stylesheets/application.scss", before: "@import \"bootstrap\";\n" do
+    "@import 'font-awesome';\n"
+  end
 
   puts green("✅ Bootstrap template configured!")
 end
@@ -467,7 +485,7 @@ def select_template
   puts cyan("Please choose your template type:")
   puts "\n"
   puts "  #{green('1)')} #{yellow('Default')}   - Rails + sass"
-  puts "  #{green('2)')} #{yellow('Bootstrap')} - Rails + Bootstrap 5"
+  puts "  #{green('2)')} #{yellow('Bootstrap')} - Rails + Bootstrap 5 + Font Awesome"
   puts "  #{green('3)')} #{yellow('Tailwind')}  - Rails + Tailwind CSS"
   puts "\n"
 
