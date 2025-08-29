@@ -1,0 +1,195 @@
+name: CI
+
+# Universal GitHub Actions CI for Rails Projects
+# This workflow automatically detects Ruby version, database, and test setup
+# Works with PostgreSQL, SQLite, and auto-detects system tests (Capybara)
+
+on:
+  push:
+    branches: ['main', 'master'] # Supports both main and master
+  pull_request:
+    branches: ['main', 'master']
+
+jobs:
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Extract Ruby version from .ruby-version or Gemfile
+        id: ruby-version
+        run: |
+          if [ -f .ruby-version ]; then
+            RUBY_VERSION=$(cat .ruby-version | tr -d '\n')
+          elif [ -f Gemfile ]; then
+            RUBY_VERSION=$(grep -E "^ruby ['\"]" Gemfile | sed -E "s/ruby ['\"]([^'\"]+)['\"].*/\1/" || echo "3.3.5")
+          else
+            RUBY_VERSION="3.3.5"
+          fi
+          echo "version=$RUBY_VERSION" >> $GITHUB_OUTPUT
+          echo "Using Ruby version: $RUBY_VERSION"
+
+      - name: Setup Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          bundler-cache: true
+          ruby-version: ${{ steps.ruby-version.outputs.version }}
+
+      - name: Analyze code
+        run: bundle exec rubocop
+
+  test:
+    name: Test
+    needs: lint
+    runs-on: ubuntu-latest
+    env:
+      RAILS_ENV: test
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Extract project configuration
+        id: config
+        run: |
+          # Extract Ruby version
+          if [ -f .ruby-version ]; then
+            RUBY_VERSION=$(cat .ruby-version | tr -d '\n')
+          elif [ -f Gemfile ]; then
+            RUBY_VERSION=$(grep -E "^ruby ['\"]" Gemfile | sed -E "s/ruby ['\"]([^'\"]+)['\"].*/\1/" || echo "3.3.5")
+          else
+            RUBY_VERSION="3.3.5"
+          fi
+
+          # Extract test database name from database.yml
+          if [ -f config/database.yml ]; then
+            DB_NAME=$(grep -A 10 "^test:" config/database.yml | grep "database:" | head -1 | sed 's/.*database: *\(.*\)/\1/' | tr -d '"' | tr -d "'")
+            # If using ERB, use repository name + _test
+            if [[ "$DB_NAME" == *"<"* ]] || [ -z "$DB_NAME" ]; then
+              DB_NAME="${{ github.event.repository.name }}_test"
+            fi
+          else
+            DB_NAME="${{ github.event.repository.name }}_test"
+          fi
+
+          # Detect if using PostgreSQL
+          if grep -q "postgresql\|pg" config/database.yml 2>/dev/null || grep -q "gem ['\"]pg['\"]" Gemfile 2>/dev/null; then
+            DB_ADAPTER="postgresql"
+            POSTGRES_VERSION="13"
+          else
+            DB_ADAPTER="sqlite3"
+            POSTGRES_VERSION=""
+          fi
+
+          echo "ruby-version=$RUBY_VERSION" >> $GITHUB_OUTPUT
+          echo "db-name=$DB_NAME" >> $GITHUB_OUTPUT
+          echo "db-adapter=$DB_ADAPTER" >> $GITHUB_OUTPUT
+          echo "postgres-version=$POSTGRES_VERSION" >> $GITHUB_OUTPUT
+
+          echo "Detected Ruby: $RUBY_VERSION"
+          echo "Detected DB: $DB_NAME ($DB_ADAPTER)"
+
+      - name: Setup Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          bundler-cache: true
+          ruby-version: ${{ steps.config.outputs.ruby-version }}
+
+      - name: Setup PostgreSQL
+        if: steps.config.outputs.db-adapter == 'postgresql'
+        uses: harmon758/postgresql-action@v1
+        with:
+          postgresql version: ${{ steps.config.outputs.postgres-version }}
+          postgresql db: ${{ steps.config.outputs.db-name }}
+          postgresql user: postgres
+          postgresql password: postgres
+
+      - name: Set DATABASE_URL for PostgreSQL
+        if: steps.config.outputs.db-adapter == 'postgresql'
+        run:
+          echo "DATABASE_URL=postgres://postgres:postgres@localhost:5432/${{
+          steps.config.outputs.db-name }}" >> $GITHUB_ENV
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          if [ "${{ steps.config.outputs.db-adapter }}" = "postgresql" ]; then
+            sudo apt-get install -y libpq-dev
+          fi
+          # Install Chrome for system tests if capybara is present
+          if grep -q "capybara" Gemfile 2>/dev/null; then
+            sudo apt-get install -y chromium-browser chromium-chromedriver
+            sudo ln -sf /usr/bin/chromium-browser /usr/bin/google-chrome || true
+            sudo ln -sf /usr/lib/chromium-browser/chromedriver /usr/bin/chromedriver || true
+          fi
+
+      - name: Setup Node.js (if package.json exists)
+        if: hashFiles('package.json') != ''
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      - name: Install JavaScript dependencies
+        if: hashFiles('package.json') != ''
+        run: npm ci
+
+      - name: Prepare database
+        run: bundle exec rails db:prepare
+
+      - name: Run tests
+        run: |
+          # Run unit tests
+          bundle exec rails test
+
+          # Run system tests if RUN_SYSTEM_TESTS=true
+          if [ "$RUN_SYSTEM_TESTS" = "true" ]; then
+            if grep -q "capybara" Gemfile 2>/dev/null; then
+              HEADLESS=true bundle exec rails test:system
+            fi
+          fi
+
+  security:
+    name: Security
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Extract Ruby version
+        id: ruby-version
+        run: |
+          if [ -f .ruby-version ]; then
+            RUBY_VERSION=$(cat .ruby-version | tr -d '\n')
+          elif [ -f Gemfile ]; then
+            RUBY_VERSION=$(grep -E "^ruby ['\"]" Gemfile | sed -E "s/ruby ['\"]([^'\"]+)['\"].*/\1/" || echo "3.3.5")
+          else
+            RUBY_VERSION="3.3.5"
+          fi
+          echo "version=$RUBY_VERSION" >> $GITHUB_OUTPUT
+
+      - name: Setup Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          bundler-cache: true
+          ruby-version: ${{ steps.ruby-version.outputs.version }}
+
+      - name: Run security checks
+        run: |
+          # Run Brakeman if present in Gemfile
+          if grep -q "brakeman" Gemfile 2>/dev/null; then
+            echo "Running Brakeman..."
+            bundle exec brakeman -q -w2
+          else
+            echo "Brakeman not found in Gemfile, skipping..."
+          fi
+
+          # Run Bundler Audit if present in Gemfile
+          if grep -q "bundler-audit" Gemfile 2>/dev/null; then
+            echo "Running Bundler Audit..."
+            bundle exec bundler-audit check --update
+          else
+            echo "Bundler Audit not found in Gemfile, skipping..."
+          fi
