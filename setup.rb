@@ -33,12 +33,8 @@ def setup_common_gems
   inject_into_file "Gemfile", after: "group :development, :test do\n" do
     <<~RUBY
         gem "dotenv-rails"
-        gem "brakeman", require: false
         gem "bundler-audit", require: false
         gem "overcommit", require: false
-        gem "rubocop", require: false
-        gem "rubocop-discourse", require: false
-        gem "rubocop-rails", require: false
 
         # Automated tests
         gem 'guard'
@@ -48,7 +44,6 @@ def setup_common_gems
 
   inject_into_file "Gemfile", before: "group :development, :test do\n" do
     <<~RUBY
-      gem "ostruct", "~> 0.1.0"
       gem "mini_racer", platforms: :ruby
 
       # assets
@@ -98,13 +93,6 @@ def setup_common_configs
 
   environment generators_config
 
-  # General configuration for Rails 7.1+
-  general_config = <<~RUBY
-    config.action_controller.raise_on_missing_callback_actions = false if Rails.version >= "7.1.0"
-  RUBY
-
-  environment general_config
-
   puts green("✅ Common configurations applied!")
 end
 
@@ -116,11 +104,9 @@ def setup_common_files
   run "unzip -q  -o rails_template.zip -d tmp && rm -f rails_template.zip"
 
   # Move configuration files to correct locations
-  run "mv tmp/rails_template-main/.github ."
   run "mv tmp/rails_template-main/commitizen ./bin/"
   run "mv tmp/rails_template-main/render-build.sh ./bin/"
   run "mv tmp/rails_template-main/.overcommit.yml ."
-  run "mv tmp/rails_template-main/.rubocop.yml ."
   run "mv tmp/rails_template-main/Guardfile ."
 
   puts green("✅ Configuration files downloaded and configured!")
