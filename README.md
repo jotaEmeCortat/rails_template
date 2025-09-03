@@ -1,6 +1,6 @@
 # Rails Template
 
-Professional Rails 7.1+ template with three frontend options, CI/CD, and
+Professional Rails 7.2 template with three frontend options, CI/CD, and
 production-ready deployment configuration.
 
 ## 🚀 Features
@@ -16,15 +16,13 @@ production-ready deployment configuration.
 
 - **PostgreSQL**: Database configuration for all environments
 - **Render Deploy**: Optimized build scripts and configuration
-- **CI/CD**: GitHub Actions workflow
-- **Security**: Dependabot and audit tools
 
 ## 🛠️ Quick Start
 
 Create a new Rails application with your preferred frontend:
 
 ```sh
-rails _7.1.3.4_ new <APP-NAME> -d postgresql -m https://raw.githubusercontent.com/jotaEmeCortat/rails_template/refs/heads/main/setup.rb
+rails _7.2.2.2_ new <APP-NAME> -d postgresql -m https://raw.githubusercontent.com/jotaEmeCortat/rails_template/refs/heads/main/setup.rb
 ```
 
 ## 💻 Development Workflow
